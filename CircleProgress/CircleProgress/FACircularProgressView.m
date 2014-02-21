@@ -212,6 +212,7 @@
 			gradientLayer.mask = _shapeLayer;
 			
 			[self.layer addSublayer:gradientLayer];
+			_shapeLayer.path = [self progressPath];
     }
     
     return _shapeLayer;
@@ -222,28 +223,28 @@
 - (void)refreshShapeLayer
 {
 	// Update path
-	self.shapeLayer.path = [self progressPath];
 	CALayer *currentLayer = (CALayer *)[self.shapeLayer presentationLayer];
 	CGFloat oldStrokeEnd = [(NSNumber *)[currentLayer valueForKeyPath:@"strokeEnd"] floatValue];
 	self.shapeLayer.strokeEnd = self.currentProgress;
-	// Update lastProgress
-	//	self.lastProgress = self.currentProgress;
-	// Animation
 	
 	// From value
 	CGFloat toValue = self.currentProgress;
-#warning , not perfect , need check for reverse
-	CGFloat  fromValue = self.lastProgress < oldStrokeEnd ? self.lastProgress : oldStrokeEnd;
-	NSLog(@"%f %f %f", oldStrokeEnd, self.lastProgress, fromValue);
+	CGFloat fromValue = oldStrokeEnd;
+	CGFloat duration = 0;
+	if(self.duration > 0) {
+		duration = (toValue-fromValue)/((self.currentProgress-self.lastProgress)/self.duration);
+		if(!isnormal(duration)) {
+			duration = 0;
+		}
+	}
+	
 	CABasicAnimation *pathAnimation = [CABasicAnimation animationWithKeyPath:@"strokeEnd"];
-	pathAnimation.delegate = self.delegate;
-	pathAnimation.duration = self.duration;
+	pathAnimation.delegate = self;
+	pathAnimation.duration = duration;
 	pathAnimation.fromValue = @(fromValue);
 	pathAnimation.toValue = @(toValue);
 	pathAnimation.timingFunction = [CAMediaTimingFunction functionWithName: kCAMediaTimingFunctionEaseIn];
 	[self.shapeLayer addAnimation:pathAnimation forKey:@"strokeEnd"];
-  
-  self.lastProgress = self.currentProgress;
 }
 
 #pragma mark - Public methods
@@ -261,5 +262,19 @@
     self.duration = duration;
     [self setProgress:progress animated:YES];
 }
+
+- (void)animationDidStart:(CAAnimation *)theAnimation
+{
+	[self.delegate animationDidStart: theAnimation];
+}
+
+- (void)animationDidStop:(CAAnimation *)theAnimation finished:(BOOL)flag
+{
+	if(flag) {
+		self.lastProgress = self.currentProgress;
+	}
+	[self.delegate animationDidStop: theAnimation finished: flag];
+}
+
 
 @end

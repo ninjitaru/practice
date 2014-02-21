@@ -48,11 +48,11 @@
 
 - (IBAction)tappedAuto:(id)sender
 {
-	[self.autoCircularProgressView setProgress:1.0f duration: 3.5];
+	[self.autoCircularProgressView setProgress:1.0f duration: 0.5];
 }
 - (IBAction)tappedAutoReset:(id)sender
 {
-	[self.autoCircularProgressView setProgress:0.0f duration: 3.5];
+	[self.autoCircularProgressView setProgress:0.0f duration: 0.5];
 }
 
 #pragma mark - CABasicAnimationDelegate
